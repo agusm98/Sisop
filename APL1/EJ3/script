@@ -54,7 +54,7 @@ compilar() {
 
 publicar() {
     if [[ CAN_PUSH ]]; then
-        cp ./bin/output.txt $2
+        cp ./bin/output.txt $1
     fi
 }
 echo "Parametros $c $a";
