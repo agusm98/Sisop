@@ -4,16 +4,16 @@ CAN_PUSH=false
 
 while getopts ":c:a:s:" param; do
     case $param in
-		c)
-			c=$OPTARG;; #Directorio a monitorear cambios
-			#func Monitorear(c);;
-		a)
-			a=$OPTARG;;
+        c)
+            c=$OPTARG;; #Directorio a monitorear cambios
+            #func Monitorear(c);;
+        a)
+            a=$OPTARG;;
         s)
             s=$OPTARG;;
-		*)
-			echo "$param not valid";;
-	esac
+        *)
+            echo "$param not valid";;
+    esac
 done
 
 actionHandler() {
