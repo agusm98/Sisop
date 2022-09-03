@@ -1,9 +1,7 @@
 #! /bin/bash
 
-ACTIONS=();
-
 while getopts ":c:a:" param; do
-	case "${param}" in
+    case "${param}" in
 		c)
 			c=${OPTARG};; #Directorio a monitorear cambios
 			#func Monitorear(c);;
@@ -14,17 +12,36 @@ while getopts ":c:a:" param; do
 	esac
 done
 
-IFS=','
-for i in $a; do
-		echo "$i"
-		#functions per actions
-		#listar()
-		#peso()
-		#compilar()
-		#publicar()
-done
+actionHandler() {
 
+    IFS=','
+    for action in $a; do
+        case $action in
+            listar)
+                listar $c;;
+            peso)
+                peso c;;
+            compilar)
+                compilar c;;
+            publicar)
+                publicar c s;;
+            *)
+                echo "$action invalida";;
+        esac
+		    #functions per actions
+		    #listar()
+		    #peso()
+		    #compilar()
+		    #publicar()
+    done
+}
+
+listar() {
+    echo `ls $1`
+}
+
+peso() { echo "peso call $1"; }
+compilar() { echo "compilar call $1"; }
+publicar() { echo "publicar call $1 $2"; }
 echo "Parametros $c $a";
-echo "Actions $ACTIONS"
-	
-
+actionHandler
