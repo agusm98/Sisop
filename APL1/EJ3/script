@@ -1,5 +1,7 @@
 #! /bin/bash
 
+CAN_PUSH=false
+
 while getopts ":c:a:" param; do
     case "${param}" in
 		c)
@@ -32,10 +34,11 @@ actionHandler() {
 }
 
 listar() {
-    echo `ls $1`
+    find $1 -type -f -name '*.txt'
 }
 
 peso() { echo "peso call $1"; }
+
 compilar() {
     #if file exist remove
     if [[ -e ./bin/output.txt ]]; then
@@ -46,6 +49,7 @@ compilar() {
     touch ./bin/output.txt
     
     find $1 -type f -name '*.txt' -exec cat {} + >> './bin/output.txt';
+    CAN_PUSH=true #TODO: Usar pipe en vez de booleano
 }
 
 publicar() {
