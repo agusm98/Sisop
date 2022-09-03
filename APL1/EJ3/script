@@ -1,0 +1,30 @@
+#! /bin/bash
+
+ACTIONS=();
+
+while getopts ":c:a:" param; do
+	case "${param}" in
+		c)
+			c=${OPTARG};; #Directorio a monitorear cambios
+			#func Monitorear(c);;
+		a)
+			a=${OPTARG};;
+		*)
+			echo "${param} not valid";;
+	esac
+done
+
+IFS=','
+for i in $a; do
+		echo "$i"
+		#functions per actions
+		#listar()
+		#peso()
+		#compilar()
+		#publicar()
+done
+
+echo "Parametros $c $a";
+echo "Actions $ACTIONS"
+	
+
