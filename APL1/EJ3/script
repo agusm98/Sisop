@@ -20,19 +20,14 @@ actionHandler() {
             listar)
                 listar $c;;
             peso)
-                peso c;;
+                peso $c;;
             compilar)
-                compilar c;;
+                compilar $c;;
             publicar)
-                publicar c s;;
+                publicar $s;;
             *)
                 echo "$action invalida";;
         esac
-		    #functions per actions
-		    #listar()
-		    #peso()
-		    #compilar()
-		    #publicar()
     done
 }
 
@@ -41,7 +36,22 @@ listar() {
 }
 
 peso() { echo "peso call $1"; }
-compilar() { echo "compilar call $1"; }
-publicar() { echo "publicar call $1 $2"; }
+compilar() {
+    #if file exist remove
+    if [[ -e ./bin/output.txt ]]; then
+        rm ./bin/output.txt
+    fi
+    #create output file
+    mkdir -p ./bin
+    touch ./bin/output.txt
+    
+    find $1 -type f -name '*.txt' -exec cat {} + >> './bin/output.txt';
+}
+
+publicar() {
+    if [[ CAN_PUSH ]]; then
+        cp ./bin/output.txt $2
+    fi
+}
 echo "Parametros $c $a";
 actionHandler
