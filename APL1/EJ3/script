@@ -1,7 +1,7 @@
 #! /bin/bash
 
 CAN_PUSH=false
-
+#TODO --help: show n exit
 while getopts ":c:a:s:" param; do
     case $param in
         c)
@@ -30,7 +30,7 @@ actionHandler() {
             publicar)
                 publicar $s;;
             *)
-                echo "$action invalida";;
+                echo "$action invalida";; #TODO usage function
         esac
     done
 }
