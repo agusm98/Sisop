@@ -17,15 +17,14 @@ done
 
 actionHandler() {
     ACTIONS=()
-    while read IN; do
-        echo "input from pipe $IN"
-    done
 
     IFS=',' read -r -a ACTIONS <<< "$a";
     echo "Actions: ${ACTIONS[*]}"
 
     if [[ "${ACTIONS[*]}" =~ "listar" ]]; then
-        listar $c;
+        while read IN; do
+           listar $IN;
+       done
     fi
     
     if [[ "${ACTIONS[*]}" =~ "peso" ]]; then
@@ -42,7 +41,8 @@ actionHandler() {
 
 listar() {
     echo "call listar"
-    find $1 -type f -name '*.txt'
+    #find $1 -type f -name '*.txt'
+    echo "Event on file: $3"
 }
 
 peso() { echo "peso call $1"; }
@@ -58,7 +58,6 @@ compilar() {
     touch ./bin/output.txt
     
     find $1 -type f -name '*.txt' -exec cat {} + >> './bin/output.txt';
-    CAN_PUSH=true #TODO: Usar pipe en vez de booleano
 }
 
 publicar() {
@@ -68,4 +67,4 @@ publicar() {
 echo "Parametros $c $a $s";
 #notify creados,modificados,renombrados,borrados
 #inotify -m $c -e create,modify,delete | actionHandler
-cat demon_input | actionHandler
+cat demon_output | actionHandler
