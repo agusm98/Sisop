@@ -1,6 +1,5 @@
 #! /bin/bash
 
-CAN_PUSH=false
 #TODO --help: show n exit
 while getopts ":c:a:s:" param; do
     case $param in
@@ -17,31 +16,39 @@ while getopts ":c:a:s:" param; do
 done
 
 actionHandler() {
-
-    IFS=','
-    for action in $a; do
-        case $action in
-            listar)
-                listar $c;;
-            peso)
-                peso $c;;
-            compilar)
-                compilar $c;;
-            publicar)
-                publicar $s;;
-            *)
-                echo "$action invalida";; #TODO usage function
-        esac
+    ACTIONS=()
+    while read IN; do
+        echo "input from pipe $IN"
     done
+
+    IFS=',' read -r -a ACTIONS <<< "$a";
+    echo "Actions: ${ACTIONS[*]}"
+
+    if [[ "${ACTIONS[*]}" =~ "listar" ]]; then
+        listar $c;
+    fi
+    
+    if [[ "${ACTIONS[*]}" =~ "peso" ]]; then
+        peso $c;
+    fi
+
+    if [[ "${ACTIONS[*]}" =~ "compilar" ]]; then
+        compilar $c; 
+        if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
+            publicar $s;
+        fi
+    fi
 }
 
 listar() {
-    find $1 -type -f -name '*.txt'
+    echo "call listar"
+    find $1 -type f -name '*.txt'
 }
 
 peso() { echo "peso call $1"; }
 
 compilar() {
+    echo "call compilar"
     #if file exist remove
     if [[ -e ./bin/output.txt ]]; then
         rm ./bin/output.txt
@@ -55,9 +62,10 @@ compilar() {
 }
 
 publicar() {
-    if [[ CAN_PUSH ]]; then
-        cp ./bin/output.txt $1
-    fi
+    echo "call publicar"
+    cp ./bin/output.txt $1;
 }
 echo "Parametros $c $a $s";
-actionHandler
+#notify creados,modificados,renombrados,borrados
+#inotify -m $c -e create,modify,delete | actionHandler
+cat demon_input | actionHandler
