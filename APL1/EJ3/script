@@ -1,51 +1,85 @@
 #! /bin/bash
 
 #TODO --help: show n exit
+
+helper() {
+    echo "Helper output"
+}
+
+ACTIONS=()
+
 while getopts ":c:a:s:" param; do
     case $param in
         c)
             c=$OPTARG;; #Directorio a monitorear cambios
-            #func Monitorear(c);;
         a)
-            a=$OPTARG;;
+            a=$OPTARG #Acciones a tomar con los cambios
+            IFS=',' read -r -a ACTIONS <<< "$a";;
         s)
-            s=$OPTARG;;
+            s=$OPTARG;; #Directorio de salida
         *)
-            echo "$param not valid";;
+            helper;;
     esac
 done
 
+unset IFS;
+
 actionHandler() {
-    ACTIONS=()
+    echo "Enterin actionHandler"
+    FILESNAME=()
 
-    IFS=',' read -r -a ACTIONS <<< "$a";
-    echo "Actions: ${ACTIONS[*]}"
-
-    if [[ "${ACTIONS[*]}" =~ "listar" ]]; then
-        while read IN; do
-           listar $IN;
-       done
-    fi
-    
-    if [[ "${ACTIONS[*]}" =~ "peso" ]]; then
-        peso $c;
-    fi
-
-    if [[ "${ACTIONS[*]}" =~ "compilar" ]]; then
-        compilar $c; 
-        if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
-            publicar $s;
+    while read IN; do
+        if [[ "$IN" == *"$c"* ]]; then
+            echo "agregando al filesname $IN";
+            FILESNAME+=($(echo "$IN" | awk '{print $1$3}'))
+        else
+            echo "daemon output $IN"
         fi
+    done
+
+    echo "Filesname ${FILESNAME[@]}"
+    
+    if [ ${#FILESNAME[@]} -eq 0 ]; then
+        echo "No files"
+    else
+        if [[ "${ACTIONS[*]}" =~ "listar" ]]; then
+            listar FILESNAME
+        fi
+    
+        if [[ "${ACTIONS[*]}" =~ "peso" ]]; then
+            peso FILESNAME
+        fi
+
+        if [[ "${ACTIONS[*]}" =~ "compilar" ]]; then
+            compilar $c; 
+            if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
+                publicar $s;
+            fi
+        fi
+
     fi
+    exit
 }
 
 listar() {
-    echo "call listar"
-    #find $1 -type f -name '*.txt'
-    echo "Event on file: $3"
+    local -n files=$1
+    echo "Listar call"
+
+    for i in "${files[@]}"; do
+        echo "file: $i"
+    done
 }
 
-peso() { echo "peso call $1"; }
+peso() {
+    local -n files=$1
+    echo "peso call"
+
+    for i in "${files[@]}"; do
+        if test -f "$i"; then
+            wc -c < "$i"
+        fi
+    done
+}
 
 compilar() {
     echo "call compilar"
@@ -57,7 +91,7 @@ compilar() {
     mkdir -p ./bin
     touch ./bin/output.txt
     
-    find $1 -type f -name '*.txt' -exec cat {} + >> './bin/output.txt';
+    find $1 -type f -name '*' -exec cat {} + >> './bin/output.txt';
 }
 
 publicar() {
@@ -66,5 +100,11 @@ publicar() {
 }
 echo "Parametros $c $a $s";
 #notify creados,modificados,renombrados,borrados
-#inotify -m $c -e create,modify,delete | actionHandler
-cat demon_output | actionHandler
+#d_pipe="./daemonOutput" 
+#if [ ! -p $d_pipe ]; then
+#    mkfifo "$d_pipe"
+#fi
+
+inotifywait -m -r -e create,modify,delete $c | actionHandler &
+
+#cat demon_output | actionHandler
