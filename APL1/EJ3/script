@@ -30,12 +30,23 @@ if [ $# -eq 0 ]; then
     helper
 fi
 
+checkPermissions() {
+    
+    for modFile in `find $1 -printf "%M "`; do
+        if [[ ! "${modFile:1:1}" == 'r' ]]; then
+            echo "Check file permissions!"
+            exit 1
+        fi
+    done
+}
+
 ACTIONS=()
 
 while getopts ":c:a:s:h" param; do
     case $param in
         c)
-            c="$OPTARG";; #Directorio a monitorear cambios
+            c="$OPTARG" #Directorio a monitorear cambios
+            checkPermissions "$c";;
         a)
             a=$OPTARG #Acciones a tomar con los cambios
             IFS=',' read -r -a ACTIONS <<< "$a";;
