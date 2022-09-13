@@ -3,12 +3,24 @@
 #TODO --help: show n exit
 
 helper() {
-    echo "Helper output"
+    echo ""
+    echo "Options"
+    echo "-?, -h, --help Output some helpful usage information"
+    echo "-c Path to monitor recursively"
+    echo "-a Actions to take when an event occurs. All Options call example: listar,peso,compilar,publicar"
+    echo "-s Path to publish. Creates the directory if needed. Requires Compilar action"
+    echo ""
+    exit -1
 }
+
+if [ $# -eq 0 ]; then
+    echo "No arguments, cant run!"
+    helper
+fi
 
 ACTIONS=()
 
-while getopts ":c:a:s:" param; do
+while getopts ":c:a:s:h" param; do
     case $param in
         c)
             c=$OPTARG;; #Directorio a monitorear cambios
@@ -17,9 +29,18 @@ while getopts ":c:a:s:" param; do
             IFS=',' read -r -a ACTIONS <<< "$a";;
         s)
             s=$OPTARG;; #Directorio de salida
-        *)
+        h)
             helper;;
-    esac
+        help)
+            helper;;
+        *)
+            if [[ ${OPTARG} == '?' || ${OPTARG} == '-' ]]; then
+                helper
+            else
+                echo "Invalid argunment ${OPTARG} cant run!"
+                helper
+            fi;;
+   esac
 done
 
 unset IFS;
@@ -44,7 +65,7 @@ actionHandler() {
                 fi
             fi
         else
-            echo "daemon output $IN"
+            echo "Daemon output: $IN"
         fi
     done
 }
@@ -73,6 +94,9 @@ compilar() {
 }
 
 publicar() {
+    if [[ ! -e "$1" ]]; then
+        mkdir -p "$1"
+    fi
     cp ./bin/output.txt $1;
 }
 
