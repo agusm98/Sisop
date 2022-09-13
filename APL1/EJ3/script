@@ -23,12 +23,12 @@ ACTIONS=()
 while getopts ":c:a:s:h" param; do
     case $param in
         c)
-            c=$OPTARG;; #Directorio a monitorear cambios
+            c="$OPTARG";; #Directorio a monitorear cambios
         a)
             a=$OPTARG #Acciones a tomar con los cambios
             IFS=',' read -r -a ACTIONS <<< "$a";;
         s)
-            s=$OPTARG;; #Directorio de salida
+            s="$OPTARG";; #Directorio de salida
         h)
             helper;;
         help)
@@ -75,10 +75,13 @@ listar() {
 }
 
 peso() {
-    if test -f "$i"; then
-        echo "Size: "
-        wc -c < "$i"
+    echo "Size: "
+    if test -f "$1"; then
+        wc -c < "$1";
+    else
+        echo "You deleted it monster.."
     fi
+
 }
 
 compilar() {
