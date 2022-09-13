@@ -1,4 +1,5 @@
 #! /bin/bash
+
 ##-----------------------Inicio Encabezado----------------------------##
 # Nombre Script: "script"
 # Numero Trabajo Practico: 1
@@ -102,7 +103,7 @@ peso() {
     if test -f "$1"; then
         wc -c < "$1";
     else
-        echo "You deleted it monster.."
+        echo "You deleted it monster..."
     fi
 
 }
@@ -126,4 +127,4 @@ publicar() {
     cp ./bin/output.txt "$1";
 }
 
-inotifywait -m -r -e create,modify,delete $c | actionHandler &
+nohup inotifywait -m -r -e create,modify,delete $c | actionHandler &
