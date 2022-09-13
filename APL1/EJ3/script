@@ -1,6 +1,18 @@
 #! /bin/bash
-
-#TODO --help: show n exit
+##-----------------------Inicio Encabezado----------------------------##
+# Nombre Script: "script"
+# Numero Trabajo Practico: 1
+# Numero Ejercicio: 2
+# Tipo 1ra REentrega
+#
+# Apellido y Nombre     DNI
+# --------------------- -----------
+# Ayala Fernando Ariel, 36.238.748
+# Cascasi Axel Joel,    42.200.104
+# Castellana Julian,    42.252.533
+# Mansilla Agustin,     41.257.066
+# Turri Teo Francis,    42.819.058
+##-----------------------Fin del Encabezado---------------------------##
 
 helper() {
     echo ""
