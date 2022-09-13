@@ -25,12 +25,9 @@ done
 unset IFS;
 
 actionHandler() {
-    echo "Enterin actionHandler"
-    #FILESNAME=()
 
     while read IN; do
         if [[ "$IN" == *"$c"* ]]; then
-            echo "agregando al filesname $IN";
             FILENAME=$(echo "$IN" | awk '{print $1$3}')
             if [[ "${ACTIONS[*]}" =~ "listar" ]]; then
                 listar $FILENAME
@@ -53,17 +50,17 @@ actionHandler() {
 }
 
 listar() {
-    echo "file: $1"
+    echo "File: $1"
 }
 
 peso() {
     if test -f "$i"; then
+        echo "Size: "
         wc -c < "$i"
     fi
 }
 
 compilar() {
-    echo "call compilar"
     #if file exist remove
     if [[ -e ./bin/output.txt ]]; then
         rm ./bin/output.txt
@@ -76,16 +73,7 @@ compilar() {
 }
 
 publicar() {
-    echo "call publicar"
     cp ./bin/output.txt $1;
 }
-echo "Parametros $c $a $s";
-#notify creados,modificados,renombrados,borrados
-#d_pipe="./daemonOutput" 
-#if [ ! -p $d_pipe ]; then
-#    mkfifo "$d_pipe"
-#fi
 
 inotifywait -m -r -e create,modify,delete $c | actionHandler &
-
-#cat demon_output | actionHandler
