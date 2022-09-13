@@ -51,17 +51,17 @@ actionHandler() {
         if [[ "$IN" == *"$c"* ]]; then
             FILENAME=$(echo "$IN" | awk '{print $1$3}')
             if [[ "${ACTIONS[*]}" =~ "listar" ]]; then
-                listar $FILENAME
+                listar "$FILENAME"
             fi
     
             if [[ "${ACTIONS[*]}" =~ "peso" ]]; then
-                peso $FILENAME
+                peso "$FILENAME"
             fi
 
             if [[ "${ACTIONS[*]}" =~ "compilar" ]]; then
-                compilar $c; 
+                compilar "$c"; 
                 if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
-                    publicar $s;
+                    publicar "$s";
                 fi
             fi
         else
@@ -93,14 +93,14 @@ compilar() {
     mkdir -p ./bin
     touch ./bin/output.txt
     
-    find $1 -type f -name '*' -exec cat {} + >> './bin/output.txt';
+    find "$1" -type f -name '*' -exec cat {} + >> './bin/output.txt';
 }
 
 publicar() {
     if [[ ! -e "$1" ]]; then
         mkdir -p "$1"
     fi
-    cp ./bin/output.txt $1;
+    cp ./bin/output.txt "$1";
 }
 
 inotifywait -m -r -e create,modify,delete $c | actionHandler &
