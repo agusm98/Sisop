@@ -17,17 +17,17 @@
 
 helper() {
     echo ""
-    echo "Options"
-    echo "-?, -h, --help Output some helpful usage information"
-    echo "-c Path to monitor recursively"
-    echo "-a Actions to take when an event occurs. All Options call example: listar,peso,compilar,publicar"
-    echo "-s Path to publish. Creates the directory if needed. Requires Compilar action"
-    echo ""
+    echo "---Opciones---"
+    echo "-?, -h, --help Muestra la ayuda para utilizar el daemon"
+    echo "-c Directorio o path a monitorear cambios recursivamente"
+    echo "-a Acciones, separadas por coma, a tomar cuando ocurra un evento, las opciones son: listar,peso,compilar,publicar"
+    echo "-s Directorio a publicar la salida. Crea el directorio si es necesario. Requiere la accion Compilar"
+    echo "--------------"
     exit -1
 }
 
 if [ $# -eq 0 ]; then
-    echo "No arguments, cant run!"
+    echo "Sin argumentos no puedo correr!"
     helper
 fi
 
@@ -35,7 +35,7 @@ checkPermissions() {
     
     for modFile in `find $1 -printf "%M "`; do
         if [[ ! "${modFile:1:1}" == 'r' ]]; then
-            echo "Check file permissions!"
+            echo "Checkear los permisos de lectura en el directorio a monitorear."
             exit 1
         fi
     done
@@ -61,7 +61,7 @@ while getopts ":c:a:s:h" param; do
             if [[ ${OPTARG} == '?' || ${OPTARG} == '-' ]]; then
                 helper
             else
-                echo "Invalid argunment ${OPTARG} cant run!"
+                echo "Argumento invalido: ${OPTARG}"
                 helper
             fi;;
    esac
@@ -88,14 +88,14 @@ actionHandler() {
                     publicar "$s";
                 fi
             fi
-        else
-            echo "Daemon output: $IN"
+        elif [[ "$IN" == "Watches established." ]]; then
+            echo -e "\nDaemon esta vivo!"
         fi
     done
 }
 
 listar() {
-    echo "File: $1"
+    echo -e "File: \n$1"
 }
 
 peso() {
@@ -127,4 +127,4 @@ publicar() {
     cp ./bin/output.txt "$1";
 }
 
-nohup inotifywait -m -r -e create,modify,delete $c | actionHandler &
+nohup inotifywait -m -r -e create,modify,delete $c 2>&1 | actionHandler &
