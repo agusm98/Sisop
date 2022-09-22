@@ -1,0 +1,13 @@
+Random random
+Mon 12 Sep 2022 07:39:50 AM UTC
+#! /bin/bash
+
+for i in {1..50}
+do
+    date > "file$i.txt";
+done
+Tue 13 Sep 2022 03:40:49 PM UTC
+Thu 22 Sep 2022 02:39:43 AM UTC
+Tue 13 Sep 2022 03:45:55 PM UTC
+Tue 13 Sep 2022 03:46:31 PM UTC
+Algun contenido de archivo de nuevoArch al mundo

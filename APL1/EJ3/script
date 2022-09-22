@@ -31,6 +31,22 @@ if [ $# -eq 0 ]; then
     helper
 fi
 
+ACTIONS=()
+
+validateActions() {
+   
+    for i in ${1//,/ }; do
+        case $i in
+            listar|peso|compilar|publicar)
+                ACTIONS+=("$i");;
+            *)
+                echo "Accion '$i' no valida!"
+                helper;;
+        esac
+    done
+}    
+
+
 checkPermissions() {
     
     for modFile in `find $1 -printf "%M "`; do
@@ -41,18 +57,16 @@ checkPermissions() {
     done
 }
 
-ACTIONS=()
-
 while getopts ":c:a:s:h" param; do
     case $param in
         c)
             c="$OPTARG" #Directorio a monitorear cambios
             checkPermissions "$c";;
-        a)
-            a=$OPTARG #Acciones a tomar con los cambios
-            IFS=',' read -r -a ACTIONS <<< "$a";;
         s)
             s="$OPTARG";; #Directorio de salida
+        a)
+            a="$OPTARG" #Acciones a tomar con los cambios
+            validateActions "$a";;
         h)
             helper;;
         help)
@@ -64,10 +78,36 @@ while getopts ":c:a:s:h" param; do
                 echo "Argumento invalido: ${OPTARG}"
                 helper
             fi;;
-   esac
+    esac
 done
 
-unset IFS;
+validateParams() {
+    valErr=0
+    
+    if [[ -z "$c" ]]; then
+        valErr=1
+        echo "Se requiere un directorio de monitoreo -c"
+    fi
+    
+    if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
+        if [[ -z "$s" ]]; then
+            valErr=1;
+            echo "La accion publicar requiere un directorio de salida -s";
+        fi
+        
+        if [[ ! "${ACTIONS[*]}" =~ "compilar" ]]; then
+            valErr=1;
+            echo "La accion publicar requiere de la accion compilar";
+        fi
+    fi
+
+    if [[ "$valErr" -eq "1" ]]; then
+        echo "Val error!"
+        helper
+    fi
+    
+}
+
 
 actionHandler() {
 
@@ -126,5 +166,7 @@ publicar() {
     fi
     cp ./bin/output.txt "$1";
 }
+
+validateParams
 
 nohup inotifywait -m -r -e create,modify,delete $c 2>&1 | actionHandler &
