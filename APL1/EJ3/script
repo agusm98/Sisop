@@ -83,7 +83,11 @@ done
 
 validateParams() {
     valErr=0
-    
+    if [[ -z "$a" ]]; then
+        valErr=1
+        echo "Sin acciones no se puede ejecutar el demonio"
+    fi 
+
     if [[ -z "$c" ]]; then
         valErr=1
         echo "Se requiere un directorio de monitoreo -c"
@@ -91,18 +95,17 @@ validateParams() {
     
     if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
         if [[ -z "$s" ]]; then
-            valErr=1;
-            echo "La accion publicar requiere un directorio de salida -s";
+            valErr=1
+            echo "La accion publicar requiere un directorio de salida -s"
         fi
         
         if [[ ! "${ACTIONS[*]}" =~ "compilar" ]]; then
-            valErr=1;
-            echo "La accion publicar requiere de la accion compilar";
+            valErr=1
+            echo "La accion publicar requiere de la accion compilar"
         fi
     fi
 
     if [[ "$valErr" -eq "1" ]]; then
-        echo "Val error!"
         helper
     fi
     
