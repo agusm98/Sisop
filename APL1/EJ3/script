@@ -130,6 +130,12 @@ actionHandler() {
             fi
         elif [[ "$IN" == "Watches established." ]]; then
             echo -e "\nDaemon esta vivo!"
+            if [[ "${ACTIONS[*]}" =~ "compilar" ]]; then
+                compilar "$c"; 
+                if [[ "${ACTIONS[*]}" =~ "publicar" ]]; then
+                    publicar "$s";
+                fi
+            fi
         fi
     done
 }
