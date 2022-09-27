@@ -3,40 +3,18 @@ Param(
     [string] $codigo,
 
     [Parameter(Mandatory=$true)]
-    [ValidateSet("listar", "peso", "compilar", "publicar")]
-    [string[]] $acciones,
+    [string] $acciones,
     
     [Parameter]
     [string] $salida
 )
 
-function execActions() {
-    Param(
-        [string[]] $actions,
-        [string] $fileName,
-        [string] $fileSize,
-        [string] $rootPath,
-        [string] $pushPath
-    )
-
-    if ($actions.Contains("listar")) {
-        Write-Host "File: {0}" -f $fileName
-    }
-    if ($actions.Contains("peso")) {
-        Write-Host "Size: {0}" -f $fileSize
-    }
-    if ($actions.Contains("compilar")) {
-        Compile $rootPath
-        if($actions.Contains("publicar")) {
-            Publish $pushPath
-        }
-    }
-}
-
 function Compile() {
     Param(
         [string] $rootPath
     )
+    Write-Host "In Compile function $rootPath"    
+    dir "$rootPath*" -rec | gc | Out-File ./bin/output.txt
 }
 
 function Publish() {
@@ -51,28 +29,40 @@ $daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
 }
 
 $actionHandler = {
+    $actions = $acciones.Split(',')
     $details = $event.SourceEventArgs
     $Name = $details.Name
     $FullPath = $details.FullPath
+    $Path = $details.Path
     $Size = (Get-Item $FullPath).length
     $OldName = $details.OldName
+    
 
-    $ChangeType = $details.ChangeType
-
-    switch ($ChangeType)
-    {
-        'Changed' {
-            Write-Host "File {0} was modified with new size {1}" -f $Name, $Size
+    Write-Host "$Name $FullPath $Size $Path"
+    Write-Host "$actions"
+    
+    if ($actions.Contains('listar')) {
+        Write-Host "File: {0}" -f $Name
+    }
+    
+    Write-Host "cant pass if??"
+    
+    if ($actions -contains 'peso') {
+        Write-Host "Size: {0}" -f $Size
+    }
+    
+    if ($actions -contains 'compilar') {
+        Write-Host "Compiling $Path"
+        Compile $codigo
+        <#
+        if($actions.Contains("publicar")) {
+            Publish $pushPath
         }
-        'Created' {
-            Write-Host "New file {0} created" -f $Name
-        }
-        'Deleted' {
-            Write-Host "File {0} was deleted" -f $OldName
-        }
-        'Renamed' {
-            Write-Host "File {0} was renamed to {1}" -f $OldName, $Name
-        }
+        #>
+    }
+    
+    foreach ($act in $actions) {
+        Write-Host "Acciont $act"
     }
 }
 
@@ -84,7 +74,7 @@ $handlers = . {
 }
 
 $daemon.EnableRaisingEvents = $true
-Write-Host "Daemon esta vivo! Escuchando $Path"
+Write-Host "Daemon esta vivo! Escuchando $codigo"
 
 while($true) {
     Wait-Event -Timeout 1
