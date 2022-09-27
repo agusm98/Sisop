@@ -1,0 +1,67 @@
+Param(
+    [Parameter(Mandatory=$true)]
+    [string] $codigo,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("listar", "peso", "compilar", "publicar")]
+    [String[]] $acciones,
+    
+    [Parameter]
+    [string] $salida
+)
+
+
+$daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
+    Path = $Path
+    IncludeSubdirectories = $true
+}
+
+$action = {
+    $details = $event.SourceEventArgs
+    $Name = $details.Name
+    $FullPath = $details.FullPath
+    $Size = (Get-Item $FullPath).length
+    $OldName = $details.OldName
+
+    $ChangeType = $details.ChangeType
+
+    switch ($ChangeType)
+    {
+        'Changed' { "CHANGE" }
+        'Created' { "CREATED" }
+        'Deleted' {
+            Write-Host "File {0} was deleted" -f $OldName
+        }
+        'Renamed' {
+            Write-Host "File {0} was renamed to {1}" -f $OldName, $Name
+        }
+    }
+}
+
+$handlers = . {
+    Register-ObjectEvent -InputObject $daemon -EventName Created -Action $action
+    Register-ObjectEvent -InputObject $daemon -EventName Changed -Action $action
+    Register-ObjectEvent -InputObject $daemon -EventName Deleted -Action $action
+    Register-ObjectEvent -InputObject $daemon -EventName Renamed -Action $action
+}
+
+$daemon.EnableRaisingEvents = $true
+Write-Host "Daemon esta vivo! Escuchando $Path"
+
+while($true) {
+    Wait-Event -Timeout 1
+}
+
+finally
+{
+    $daemon.EnableRaisingEvents = $false
+    $handlers | ForEach-Object {
+        Unregister-Event -SourceIdentifier $_.Name
+    }
+
+    $handlers | Remove-Jod
+
+    $daemon.Dispose()
+
+    Write-Warning "Gracias, vuelva prontos"
+}
