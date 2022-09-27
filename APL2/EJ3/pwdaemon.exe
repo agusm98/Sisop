@@ -37,15 +37,9 @@ $actionHandler = {
     $Size = (Get-Item $FullPath).length
     $OldName = $details.OldName
     
-
-    Write-Host "$Name $FullPath $Size $Path"
-    Write-Host "$actions"
-    
     if ($actions.Contains('listar')) {
         Write-Host "File: $Name"
     }
-    
-    Write-Host "cant pass if??"
     
     if ($actions.Contains('peso')) {
         Write-Host "Size: $Size"
