@@ -13,8 +13,8 @@ function Compile() {
     Param(
         [string] $rootPath
     )
-    Write-Host "In Compile function $rootPath"    
-    dir "$rootPath*" -rec | gc | Out-File ./bin/output.txt
+    Write-Host "Se compilan los archivos de $rootPath en ./bin/output"    
+    Get-ChildItem -Path $rootPath -Recurse | Get-Content | Out-File ( New-Item -Path "./bin/output" -Force )
 }
 
 function Publish() {
@@ -42,17 +42,16 @@ $actionHandler = {
     Write-Host "$actions"
     
     if ($actions.Contains('listar')) {
-        Write-Host "File: {0}" -f $Name
+        Write-Host "File: $Name"
     }
     
     Write-Host "cant pass if??"
     
-    if ($actions -contains 'peso') {
-        Write-Host "Size: {0}" -f $Size
+    if ($actions.Contains('peso')) {
+        Write-Host "Size: $Size"
     }
     
-    if ($actions -contains 'compilar') {
-        Write-Host "Compiling $Path"
+    if ($actions.Contains('compilar')) {
         Compile $codigo
         <#
         if($actions.Contains("publicar")) {
@@ -61,9 +60,6 @@ $actionHandler = {
         #>
     }
     
-    foreach ($act in $actions) {
-        Write-Host "Acciont $act"
-    }
 }
 
 $handlers = . {
