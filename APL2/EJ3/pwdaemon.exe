@@ -4,19 +4,53 @@ Param(
 
     [Parameter(Mandatory=$true)]
     [ValidateSet("listar", "peso", "compilar", "publicar")]
-    [String[]] $acciones,
+    [string[]] $acciones,
     
     [Parameter]
     [string] $salida
 )
 
+function execActions() {
+    Param(
+        [string[]] $actions,
+        [string] $fileName,
+        [string] $fileSize,
+        [string] $rootPath,
+        [string] $pushPath
+    )
+
+    if ($actions.Contains("listar")) {
+        Write-Host "File: {0}" -f $fileName
+    }
+    if ($actions.Contains("peso")) {
+        Write-Host "Size: {0}" -f $fileSize
+    }
+    if ($actions.Contains("compilar")) {
+        Compile $rootPath
+        if($actions.Contains("publicar")) {
+            Publish $pushPath
+        }
+    }
+}
+
+function Compile() {
+    Param(
+        [string] $rootPath
+    )
+}
+
+function Publish() {
+    Param(
+        [string] $output
+    )
+}
 
 $daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
-    Path = $Path
+    Path = $codigo
     IncludeSubdirectories = $true
 }
 
-$action = {
+$actionHandler = {
     $details = $event.SourceEventArgs
     $Name = $details.Name
     $FullPath = $details.FullPath
@@ -27,8 +61,12 @@ $action = {
 
     switch ($ChangeType)
     {
-        'Changed' { "CHANGE" }
-        'Created' { "CREATED" }
+        'Changed' {
+            Write-Host "File {0} was modified with new size {1}" -f $Name, $Size
+        }
+        'Created' {
+            Write-Host "New file {0} created" -f $Name
+        }
         'Deleted' {
             Write-Host "File {0} was deleted" -f $OldName
         }
@@ -39,10 +77,10 @@ $action = {
 }
 
 $handlers = . {
-    Register-ObjectEvent -InputObject $daemon -EventName Created -Action $action
-    Register-ObjectEvent -InputObject $daemon -EventName Changed -Action $action
-    Register-ObjectEvent -InputObject $daemon -EventName Deleted -Action $action
-    Register-ObjectEvent -InputObject $daemon -EventName Renamed -Action $action
+    Register-ObjectEvent -InputObject $daemon -EventName Created -Action $actionHandler
+    Register-ObjectEvent -InputObject $daemon -EventName Changed -Action $actionHandler
+    Register-ObjectEvent -InputObject $daemon -EventName Deleted -Action $actionHandler
+    Register-ObjectEvent -InputObject $daemon -EventName Renamed -Action $actionHandler
 }
 
 $daemon.EnableRaisingEvents = $true
