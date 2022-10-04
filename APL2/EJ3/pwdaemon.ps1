@@ -1,7 +1,7 @@
 
 <#
-.Synopsis
-    Ej3
+.SYNOPSIS
+    Ej3 Daemon
 .DESCRIPTION
     Monitorea cambios de un determinado directorio en donde se encuentra la ultima version del codigo fuente, ejecutando una serie de acciones cada vez que se detecte un cambio.
 .PARAMETER -codigo
@@ -30,7 +30,6 @@ Param(
 )
 <#Validate actions#>
 $actions = $acciones.Split(',')
-$countActions = 0
 foreach($act in $actions) {
     switch ($act) {
         'listar' {}
