@@ -27,32 +27,6 @@ Param(
     
     [string] $salida
 )
-<#Validate actions#>
-$actions = $acciones.Split(',')
-foreach($act in $actions) {
-    switch ($act) {
-        'listar' {}
-        'peso' {}
-        'compilar' {
-            Get-ChildItem -Path $codigo -Recurse | ForEach-Object {
-                    $perm = ((ls -l $_.FullName) -Split " ")[0].Substring(1,1)
-                    if(!($perm -eq 'r')) {
-                    Write-Host "checkear los permisos de lectura de $_ en el directorio a monitorear"
-                    }
-            }
-        }
-        'publicar' {
-            if(!($PSBoundParameters.ContainsKey('salida'))) {
-                Write-Host "Para la accion publicar es necesario el parametro -salida"
-                exit
-            }
-        }
-        default {
-            Write-Host "Accion no valida $_"
-            exit
-        }
-    }
-}
 
 function Compile() {
     Param(
@@ -72,6 +46,37 @@ function Publish() {
     Write-Host "Se publican los archivos de ./bin/output en $output"   
     Copy-Item -Path ./bin/output -Destination $output
 }
+
+
+<#Validate actions#>
+$actions = $acciones.Split(',')
+foreach($act in $actions) {
+    switch ($act) {
+        'listar' {}
+        'peso' {}
+        'compilar' {
+            Get-ChildItem -Path $codigo -Recurse | ForEach-Object {
+                    $perm = ((ls -l $_.FullName) -Split " ")[0].Substring(1,1)
+                    if(!($perm -eq 'r')) {
+                    Write-Host "checkear los permisos de lectura de $_ en el directorio a monitorear"
+                    }
+            }
+            Compile $codigo
+        }
+        'publicar' {
+            if(!($PSBoundParameters.ContainsKey('salida'))) {
+                Write-Host "Para la accion publicar es necesario el parametro -salida"
+                exit
+            }
+            Publish $salida
+        }
+        default {
+            Write-Host "Accion no valida $_"
+            exit
+        }
+    }
+}
+
 
     $daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
         Path = $codigo
