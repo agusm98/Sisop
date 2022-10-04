@@ -34,7 +34,6 @@ function Compile() {
     )
     Write-Host "Se compilan los archivos de $rootPath en ./bin/output"    
     Get-ChildItem -Path $rootPath -Recurse | Get-Content | Out-File ( New-Item -Path "./bin/output" -Force )
-    return
 }
 
 function Publish() {
@@ -46,9 +45,7 @@ function Publish() {
     }
     Write-Host "Se publican los archivos de ./bin/output en $output"   
     Copy-Item -Path ./bin/output -Destination $output
-    return
 }
-
 
 <#Validate actions#>
 foreach($act in $acciones) {
@@ -64,7 +61,7 @@ foreach($act in $acciones) {
                     }
             }
             Compile $codigo
-        
+            $canComp = 1
             if($acciones.Contains('publicar')) {
                 if(!($PSBoundParameters.ContainsKey('salida'))) {
                     Write-Host "Para la accion publicar es necesario el parametro -salida"
@@ -86,45 +83,69 @@ foreach($act in $acciones) {
     }
 }
 
+try {
     $daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
         Path = $codigo
         IncludeSubdirectories = $true
     }
 
     $actionHandler = {
+        $actions = $Event.MessageData.actions
+        $comp = $Event.MessageData.comp
+        $output = $Event.MessageData.output
         $details = $event.SourceEventArgs
         $Name = $details.Name
+        $FullPath = $details.FullPath
         $Size = (Get-Item $FullPath).length
-    
-        if ($acciones.Contains('listar')) {
+        
+        if($actions.Contains("listar")) {
             Write-Host "File: $Name"
         }
     
-        if ($acciones.Contains('peso')) {
+        if($actions.Contains("peso")) {
             Write-Host "Size: $Size"
         }   
     
-        if ($acciones.Contains('compilar')) {
-            Compile $codigo
-            if($acciones.Contains('publicar')) {
-                Publish $salida
+
+        if($actions.Contains("compilar")) {
+            Write-Host "Se compilan los archivos de $comp en ./bin/output"    
+            Get-ChildItem -Path $comp -Recurse | Get-Content | Out-File ( New-Item -Path "./bin/output" -Force )
+            if($actions.Contains("publicar")) {
+                if(!(Test-Path -Path $output)) {
+                    New-Item $output -Type Directory
+                }
+            Write-Host "Se publican los archivos de ./bin/output en $output"   
+            Copy-Item -Path ./bin/output -Destination $output
             }
         }
     
     }
 
+    $pso = New-Object psobject -property @{actions = $acciones; comp = $codigo; output = $salida}
+
     $handlers = . {
-        Register-ObjectEvent -InputObject $daemon -EventName Created -Action $actionHandler
-        Register-ObjectEvent -InputObject $daemon -EventName Changed -Action $actionHandler
-        Register-ObjectEvent -InputObject $daemon -EventName Deleted -Action $actionHandler
-        Register-ObjectEvent -InputObject $daemon -EventName Renamed -Action $actionHandler
+        Register-ObjectEvent -InputObject $daemon -EventName Created -Action $actionHandler -MessageData $pso
+        Register-ObjectEvent -InputObject $daemon -EventName Changed -Action $actionHandler -MessageData $pso
+        Register-ObjectEvent -InputObject $daemon -EventName Deleted -Action $actionHandler -MessageData $pso
+        Register-ObjectEvent -InputObject $daemon -EventName Renamed -Action $actionHandler -MessageData $pso
     }
 
     $daemon.EnableRaisingEvents = $true
-    Write-Host "Daemon esta vivo! Escuchando $codigo"
-
-Start-Process pwsh
-while($true) {
-    Wait-Event -Timeout 1
+    
+    Start-Process pwsh
+    while($true) {
+        Wait-Event -Timeout 1
+    }
 }
+finally {
+    $daemon.EnableRaisingEvents = $false
+    $handlers | ForEach-Object {
+        Unregister-Event -SourceIdentifier $_.Name
+    }
 
+    $handlers | Remove-Job
+
+    $daemon.Dispose()
+
+    Write-Warning "Killed daemon"
+}
