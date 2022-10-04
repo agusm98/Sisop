@@ -12,7 +12,8 @@ Lista de acciones separadas con coma a ejecutar cada vez que haya un cambio en e
     "listar": muestra por pantalla los nombres de los archivos que sufireron cambios (archivos creados, modificados, renombrados, borrrados)
     "peso": muestra por pantalla el peso de los archivos que sufrieron cambios.
     "compilar": compila los archivos dentro de "codigo"
-.PARAMETER -salida: ruita del directorio utilizado por la accion "publicar"
+.PARAMETER -salida
+    Ruta del directorio utilizado por la accion "publicar"
 .EXAMBLE
  ./pwdaemon.ps1 -codigo repo -acciones listar,peso,compilar,publicar -salida dirPublicacion
 #>
