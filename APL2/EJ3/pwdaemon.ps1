@@ -91,9 +91,8 @@ function Publish() {
     $daemon.EnableRaisingEvents = $true
     Write-Host "Daemon esta vivo! Escuchando $codigo"
 
-Start-Job -ScriptBlock { handlers } 
-
-    while($true) {
-        Wait-Event -Timeout 1
-    }
+Start-Process pwsh
+while($true) {
+    Wait-Event -Timeout 1
+}
 
