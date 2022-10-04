@@ -14,7 +14,7 @@ Lista de acciones separadas con coma a ejecutar cada vez que haya un cambio en e
     "compilar": compila los archivos dentro de "codigo"
 .PARAMETER -salida
     Ruta del directorio utilizado por la accion "publicar"
-.EXAMBLE
+.EXAMPLE
  ./pwdaemon.ps1 -codigo repo -acciones listar,peso,compilar,publicar -salida dirPublicacion
 #>
 
