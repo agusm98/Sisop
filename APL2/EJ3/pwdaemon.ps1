@@ -23,7 +23,7 @@ Param(
     [string] $codigo,
 
     [Parameter(Mandatory=$true)]
-    [string] $acciones,
+    [string[]] $acciones,
     
     [string] $salida
 )
@@ -49,8 +49,7 @@ function Publish() {
 
 
 <#Validate actions#>
-$actions = $acciones.Split(',')
-foreach($act in $actions) {
+foreach($act in $acciones) {
     switch ($act) {
         'listar' {}
         'peso' {}
@@ -62,13 +61,20 @@ foreach($act in $actions) {
                     }
             }
             Compile $codigo
+        
+            if($acciones.Contains('publicar')) {
+                if(!($PSBoundParameters.ContainsKey('salida'))) {
+                    Write-Host "Para la accion publicar es necesario el parametro -salida"
+                    exit
+                }
+                Publish $salida
+            }
         }
         'publicar' {
-            if(!($PSBoundParameters.ContainsKey('salida'))) {
-                Write-Host "Para la accion publicar es necesario el parametro -salida"
-                exit
+            if(!($acciones.Contains('compilar'))) {
+                Write-Host "Se necesita de la accion compilar para poder publicar"
             }
-            Publish $salida
+            exit
         }
         default {
             Write-Host "Accion no valida $_"
