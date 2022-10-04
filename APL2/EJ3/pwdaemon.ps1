@@ -36,7 +36,12 @@ foreach($act in $actions) {
         'listar' {}
         'peso' {}
         'compilar' {}
-        'publicar' {}
+        'publicar' {
+            if(!($PSBoundParameters.ContainsKey('salida'))) {
+                Write-Host "Para la accion publicar es necesario el parametro -salida"
+                exit
+            }
+        }
         default {
             Write-Host "Accion no valida $_"
             exit
@@ -87,7 +92,7 @@ function Publish() {
     
         if ($actions.Contains('compilar')) {
             Compile $codigo
-            if($actions.Contains("publicar")) {
+            if($actions.Contains('publicar')) {
                 Publish $pushPath
             }
         }
