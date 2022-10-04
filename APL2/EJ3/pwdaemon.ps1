@@ -34,6 +34,7 @@ function Compile() {
     )
     Write-Host "Se compilan los archivos de $rootPath en ./bin/output"    
     Get-ChildItem -Path $rootPath -Recurse | Get-Content | Out-File ( New-Item -Path "./bin/output" -Force )
+    return
 }
 
 function Publish() {
@@ -45,6 +46,7 @@ function Publish() {
     }
     Write-Host "Se publican los archivos de ./bin/output en $output"   
     Copy-Item -Path ./bin/output -Destination $output
+    return
 }
 
 
@@ -57,7 +59,8 @@ foreach($act in $acciones) {
             Get-ChildItem -Path $codigo -Recurse | ForEach-Object {
                     $perm = ((ls -l $_.FullName) -Split " ")[0].Substring(1,1)
                     if(!($perm -eq 'r')) {
-                    Write-Host "checkear los permisos de lectura de $_ en el directorio a monitorear"
+                        Write-Host "checkear los permisos de lectura de $_ en el directorio a monitorear"
+                        exit
                     }
             }
             Compile $codigo
@@ -73,8 +76,8 @@ foreach($act in $acciones) {
         'publicar' {
             if(!($acciones.Contains('compilar'))) {
                 Write-Host "Se necesita de la accion compilar para poder publicar"
+                exit
             }
-            exit
         }
         default {
             Write-Host "Accion no valida $_"
@@ -83,32 +86,27 @@ foreach($act in $acciones) {
     }
 }
 
-
     $daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
         Path = $codigo
         IncludeSubdirectories = $true
     }
 
     $actionHandler = {
-        <#$actions = $acciones.Split(',')#>
         $details = $event.SourceEventArgs
         $Name = $details.Name
-        $FullPath = $details.FullPath
-        $Path = $details.Path
         $Size = (Get-Item $FullPath).length
-        $OldName = $details.OldName
     
-        if ($actions.Contains('listar')) {
+        if ($acciones.Contains('listar')) {
             Write-Host "File: $Name"
         }
     
-        if ($actions.Contains('peso')) {
+        if ($acciones.Contains('peso')) {
             Write-Host "Size: $Size"
         }   
     
-        if ($actions.Contains('compilar')) {
+        if ($acciones.Contains('compilar')) {
             Compile $codigo
-            if($actions.Contains('publicar')) {
+            if($acciones.Contains('publicar')) {
                 Publish $salida
             }
         }
