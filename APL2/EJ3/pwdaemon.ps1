@@ -25,7 +25,6 @@ Param(
     [Parameter(Mandatory=$true)]
     [string] $acciones,
     
-    [Parameter]
     [string] $salida
 )
 <#Validate actions#>
@@ -64,7 +63,7 @@ function Publish() {
         New-Item $output -Type Directory
     }
     Write-Host "Se publican los archivos de ./bin/output en $output"   
-    Copy-Iterm -Path ./bin/output -Destination $output
+    Copy-Item -Path ./bin/output -Destination $output
 }
 
     $daemon = New-Object -TypeName System.IO.FileSystemWatcher -Property @{
@@ -92,7 +91,7 @@ function Publish() {
         if ($actions.Contains('compilar')) {
             Compile $codigo
             if($actions.Contains('publicar')) {
-                Publish $pushPath
+                Publish $salida
             }
         }
     
