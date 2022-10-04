@@ -28,6 +28,21 @@ Param(
     [Parameter]
     [string] $salida
 )
+<#Validate actions#>
+$actions = $acciones.Split(',')
+$countActions = 0
+foreach($act in $actions) {
+    switch ($act) {
+        'listar' {}
+        'peso' {}
+        'compilar' {}
+        'publicar' {}
+        default {
+            Write-Host "Accion no valida $_"
+            exit
+        }
+    }
+}
 
 function Compile() {
     Param(
@@ -54,7 +69,7 @@ function Publish() {
     }
 
     $actionHandler = {
-        $actions = $acciones.Split(',')
+        <#$actions = $acciones.Split(',')#>
         $details = $event.SourceEventArgs
         $Name = $details.Name
         $FullPath = $details.FullPath
@@ -72,11 +87,9 @@ function Publish() {
     
         if ($actions.Contains('compilar')) {
             Compile $codigo
-            <#
             if($actions.Contains("publicar")) {
                 Publish $pushPath
             }
-            #>
         }
     
     }
