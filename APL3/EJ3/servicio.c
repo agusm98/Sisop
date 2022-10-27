@@ -14,8 +14,6 @@ int main(int argc, char* argv[])
     if(pid == 0)
     {
         //crear semaforos
-        sem_fifo1 = sem_open("sem_fifo1", O_CREAT, 0644, 0);
-        sem_fifo2 = sem_open("sem_fifo2", O_CREAT, 0644, 0);
         serv_run();
     } else {
         printf("Proceso servidor corriendo en segundo plano!");
@@ -53,7 +51,8 @@ void usage()
 int serv_run()
 {
     char cli_opt[15];
-    int FD_IN, FD_OUT;
+    int FD_IN, FD_OUT, opt_num;
+    char text_msg[500];
 
     FD_IN = open(FIFO1, O_RDONLY);
     FD_OUT = open(FIFO2, O_WRONLY);
@@ -65,28 +64,77 @@ int serv_run()
 
         read(FD_IN, cli_opt, 15);
         //close(FD_IN);
-
+        opt_num = get_params(cli_opt);
         //Handle and write to FIFO2
         //handle_cli(cli_opt);
-        printf("FIFO 1 INPUT: %s", cli_opt);
+        printf("OPTION: %s\n", cli_opt);
+        printf("NUME: %d\n", opt_num);
 
-        write(FD_OUT, "Servicio: Mensaje recibido cliente!\n", 37);
+        action_handler(cli_opt, opt_num, text_msg);
+        printf("Paso action handler text msg %s", text_msg);
+
+        //text_msg =
+        //  "ID;DESCRIPCION;PRECIO;COSTO;STOCK;\n1;Harina Blancaflor;70;40;0;\n2;Yerba Mate Cruz de Malta;180;120;100;\n3;Café La Morenita;140;100;53;\n4;Té La Virginia;60;30;0;\n";
+
+        write(FD_OUT, text_msg, sizeof(text_msg));
         //close(FD_OUT);
         //V(FIFO2)
         //sem_post(sem_fifo2);
     } while (strstr(cli_opt, "QUIT") == NULL);
 
     close(FD_IN);
+    close(FD_OUT);
+    unlink(FIFO1);
+    unlink(FIFO2);
 
     return 0;
 }
 
-void handle_cli(char *opt)
+int get_params(char* opt)
 {
     //Obtener comanda
-    //char* cli_comm = get_opt(opt);
-    //Obtener argumento adicional
-    //nt cli_arg = get_arg(opt);
+    while(*opt != '\0')
+    {
+        if(*opt == ' ') {
+            *opt = '\0';
 
-    //etc
+            ++opt;
+            return atoi(opt); //Agusm98 was here!
+        }
+        ++opt;
+    }
+
+    return -1;
 }
+
+void sin_stock(char* msg)
+{
+    strncpy(msg, "SIN_STOCK", 10);
+}
+
+void list_prd(char* msg)
+{
+    strncpy(msg, "LIST", 5);
+}
+void stock(int num, char* msg)
+{
+    strncpy(msg, "STOCK", 6);
+}
+
+void repo(int num, char* msg)
+{
+    strncpy(msg, "REPO", 5);
+}
+
+void action_handler(char* opt, int num, char* msg)
+{
+    if(num == -1) {
+        if(strcmp(opt, "SIN_STOCK") == 0) printf("No tenemos stock");//sin_stock(msg);
+        if(strcmp(opt, "LIST") == 0) printf("No tenemos listado");//list_prd(msg);
+    } else {
+        if(strcmp(opt, "STOCK") == 0) printf("Ya le dije que no tenemos stock!");// stock(num, msg);
+        if(strcmp(opt, "REPO") == 0) printf("reponermo");//repo(num, msg);
+    }
+}
+
+

@@ -24,13 +24,19 @@ typedef struct {
 const char* FIFO1 = "/tmp/FIFO1";
 const char* FIFO2 = "/tmp/FIFO2";
 
-sem_t* sem_fifo1;
-sem_t* sem_fifo2;
-
 int validate(int argc, char* argv[]);
 
 void usage();
 
 int serv_run();
+
+int get_params(char* opt);
+
+void action_handler(char* opt, int num, char* msg);
+//ACTIONS
+void sin_stock(char* msg);
+void list_prd(char* msg);
+void stock(int num, char* msg);
+void repo(int num, char* msg);
 
 #endif // SERVICIO_H_INCLUDED

@@ -24,16 +24,8 @@ int main(int argc, char* argv[])
 
 		write(FD_OUT, entrada, strlen(entrada) + 1);
 		printf("Cliente: Logro escribir\n");
-		//close(FD_OUT);
-		//V(FIFO1)
-		//sem_post(sem_fifo1);
-		// getchar();
-
-        //P(FIFO2)
-        //sem_wait(sem_fifo2);
 
         read(FD_IN, salida, 500);
-        //close(FD_IN);
         printf("%s", salida);
 	}
 
