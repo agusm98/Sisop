@@ -16,8 +16,8 @@
 typedef struct {
     int id;
     char descr[30];
-    float prec;
-    float cost;
+    int prec;
+    int cost;
     int stock;
 } t_producto;
 
@@ -28,15 +28,15 @@ int validate(int argc, char* argv[]);
 
 void usage();
 
-int serv_run();
+int serv_run(char* filename);
 
 int get_params(char* opt);
 
-void action_handler(char* opt, int num, char* msg);
+void action_handler(char* opt, int num, char* filename, char* msg);
 //ACTIONS
-void sin_stock(char* msg);
-void list_prd(char* msg);
-void stock(int num, char* msg);
-void repo(int num, char* msg);
+void sin_stock(char* msg, char* filename);
+void list_prd(char* msg, char* filename);
+void stock(int num, char* msg, char* filename);
+void repo(int num, char* msg, char* filename);
 
 #endif // SERVICIO_H_INCLUDED

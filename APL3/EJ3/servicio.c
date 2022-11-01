@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-    //validate(argc, argv);
+    validate(argc, argv);
 
     //INPUT FIFO
     mkfifo(FIFO1, 0666);
@@ -14,9 +14,9 @@ int main(int argc, char* argv[])
     if(pid == 0)
     {
         //crear semaforos
-        serv_run();
+        serv_run(argv[1]);
     } else {
-        printf("Proceso servidor corriendo en segundo plano!");
+        printf("Proceso servidor corriendo en segundo plano!\n");
     }
 
     return 0;
@@ -48,11 +48,11 @@ void usage()
     exit(1);
 }
 
-int serv_run()
+int serv_run(char* filename)
 {
     char cli_opt[15];
     int FD_IN, FD_OUT, opt_num;
-    char text_msg[500];
+    char text_msg[200] = "";
 
     FD_IN = open(FIFO1, O_RDONLY);
     FD_OUT = open(FIFO2, O_WRONLY);
@@ -70,13 +70,14 @@ int serv_run()
         printf("OPTION: %s\n", cli_opt);
         printf("NUME: %d\n", opt_num);
 
-        action_handler(cli_opt, opt_num, text_msg);
-        printf("Paso action handler text msg %s", text_msg);
+        memset(text_msg, '\0', sizeof(text_msg));
+
+        action_handler(cli_opt, opt_num, filename, text_msg);
 
         //text_msg =
         //  "ID;DESCRIPCION;PRECIO;COSTO;STOCK;\n1;Harina Blancaflor;70;40;0;\n2;Yerba Mate Cruz de Malta;180;120;100;\n3;Café La Morenita;140;100;53;\n4;Té La Virginia;60;30;0;\n";
 
-        write(FD_OUT, text_msg, sizeof(text_msg));
+        write(FD_OUT, text_msg, 200);
         //close(FD_OUT);
         //V(FIFO2)
         //sem_post(sem_fifo2);
@@ -107,33 +108,139 @@ int get_params(char* opt)
     return -1;
 }
 
-void sin_stock(char* msg)
+void sin_stock(char* msg, char* filename)
 {
-    strncpy(msg, "SIN_STOCK", 10);
+    char rline[60];
+    t_producto prod;
+    FILE* fp;
+    int prod_found = 0;
+
+    fp = fopen(filename, "r");
+    fgets(rline, sizeof(rline), fp);//read header first
+    while(fscanf(fp, "%d;%[^;];%d;%d;%d;", &prod.id, prod.descr, &prod.prec, &prod.cost, &prod.stock) != EOF)
+    {
+        if(prod.stock == 0)
+        {
+            sprintf(rline, "%d %s $%d\n", prod.id, prod.descr, prod.cost);
+            strcat(msg, rline);
+            if(!prod_found) prod_found = 1;
+         }
+    }
+    fclose(fp);
+
+    if(!prod_found)
+    {
+        char err_msg[] = "No se encontraron productos sin stock\n";
+        memcpy(msg, err_msg, sizeof(err_msg));
+    }
 }
 
-void list_prd(char* msg)
+void list_prd(char* msg, char* filename)
 {
-    strncpy(msg, "LIST", 5);
+    char rline[60];
+    t_producto prod;
+    FILE* fp = fopen(filename, "r");
+    fgets(rline, sizeof(rline), fp);//read header first
+    while(fscanf(fp, "%d;%[^;];%d;%d;%d;", &prod.id, prod.descr, &prod.prec, &prod.cost, &prod.stock) != EOF)
+    {
+        sprintf(rline, "%d %s $%d\n", prod.id, prod.descr, prod.prec);
+        strcat(msg, rline);
+    }
+    fclose(fp);
+    //memcpy(msg, ret_msg, sizeof(ret_msg));
 }
-void stock(int num, char* msg)
+void stock(int num, char* msg, char* filename)
 {
-    strncpy(msg, "STOCK", 6);
-}
+    char rline[60];
+    t_producto prod;
+    FILE* fp;
+    int prod_found = 0;
 
-void repo(int num, char* msg)
-{
-    strncpy(msg, "REPO", 5);
-}
 
-void action_handler(char* opt, int num, char* msg)
-{
-    if(num == -1) {
-        if(strcmp(opt, "SIN_STOCK") == 0) printf("No tenemos stock");//sin_stock(msg);
-        if(strcmp(opt, "LIST") == 0) printf("No tenemos listado");//list_prd(msg);
+    if(num == -1)
+    {
+        char err_msg[] = "No se pudo ejecutar la opcion STOCK falta id de producto\n";
+        memcpy(msg, err_msg, sizeof(err_msg));
     } else {
-        if(strcmp(opt, "STOCK") == 0) printf("Ya le dije que no tenemos stock!");// stock(num, msg);
-        if(strcmp(opt, "REPO") == 0) printf("reponermo");//repo(num, msg);
+        fp = fopen(filename, "r");
+        fgets(rline, sizeof(rline), fp);//read header first
+        while(fscanf(fp, "%d;%[^;];%d;%d;%d;", &prod.id, prod.descr, &prod.prec, &prod.cost, &prod.stock) != EOF)
+        {
+            if(prod.id == num) {
+                sprintf(rline, "%s %du\n", prod.descr, prod.stock);
+                strcat(msg, rline);
+                prod_found = 1;
+                break;
+            }
+        }
+        fclose(fp);
+
+        if(!prod_found)
+        {
+            char err_msg[] = "No se pudo encontrar el producto\n";
+            memcpy(msg, err_msg, sizeof(err_msg));
+        }
+    }
+
+}
+
+void repo(int num, char* msg, char* filename)
+{
+    char rline[60];
+    t_producto prod;
+    FILE* fp;
+    int total = 0;
+
+    fp = fopen(filename, "r");
+    fgets(rline, sizeof(rline), fp);//read header first
+    while(fscanf(fp, "%d;%[^;];%d;%d;%d;", &prod.id, prod.descr, &prod.prec, &prod.cost, &prod.stock) != EOF)
+    {
+        if(prod.stock == 0)
+        {
+            total += num * prod.cost;
+         }
+    }
+    fclose(fp);
+
+    if(!total)
+    {
+        char err_msg[] = "No se pudo calcular la reposicion!\n";
+        memcpy(msg, err_msg, sizeof(err_msg));
+    } else {
+        sprintf(msg, "$%d\n", total);
+    }
+}
+
+void action_handler(char* opt, int num, char* filename, char* msg)
+{
+    int action = 0;
+
+    if(strstr(opt, "SIN_STOCK") != NULL)
+    {
+        sin_stock(msg, filename);
+        action = 1;
+    }
+    if(strstr(opt, "LIST") != NULL)
+    {
+        list_prd(msg, filename);
+        action = 1;
+    }
+
+    if(!action && strstr(opt, "STOCK") != NULL)
+    {
+        stock(num, msg, filename);
+        action = 1;
+    }
+
+    if(strstr(opt, "REPO") != NULL)
+    {
+        repo(num, msg, filename);
+        action = 1;
+    }
+
+    if(!action) {
+        char ret_msg[] = "No se ejecuto ninguna opcion [SIN_STOCK, LIST, STOCK, REPO]\n";
+        memcpy(msg, ret_msg, sizeof(ret_msg));
     }
 }
 

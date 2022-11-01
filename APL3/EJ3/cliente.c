@@ -18,15 +18,12 @@ int main(int argc, char* argv[])
         fflush(stdin);
 		fgets(entrada, 80, stdin);
 
-		printf("Cliente: Entrada %s", entrada);
-
 		entrada[strcspn(entrada, "\r\n")] = 0;
 
 		write(FD_OUT, entrada, strlen(entrada) + 1);
-		printf("Cliente: Logro escribir\n");
 
         read(FD_IN, salida, 500);
-        printf("%s", salida);
+        printf("Respuesta:\n%s\n", salida);
 	}
 
     return 0;
