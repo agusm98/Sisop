@@ -12,6 +12,8 @@
 //SEMAFORO
 #include <semaphore.h>
 #include <fcntl.h>
+//SIGNAL
+#include <signal.h>
 
 typedef struct {
     int id;
@@ -20,6 +22,8 @@ typedef struct {
     int cost;
     int stock;
 } t_producto;
+
+sem_t* serv_inst;
 
 const char* FIFO1 = "/tmp/FIFO1";
 const char* FIFO2 = "/tmp/FIFO2";

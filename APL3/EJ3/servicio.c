@@ -2,7 +2,17 @@
 
 int main(int argc, char* argv[])
 {
+    signal(SIGINT, SIG_IGN);
     validate(argc, argv);
+
+    serv_inst = sem_open("serv_inst", 0);
+    if (serv_inst == NULL)
+    {
+        serv_inst = sem_open("serv_inst", O_CREAT, S_IRUSR | S_IWUSR, 0); // 0600
+    } else {
+        printf("Ya existe una instancia server corriendo!\n");
+        exit(1);
+    }
 
     //INPUT FIFO
     mkfifo(FIFO1, 0666);
@@ -59,14 +69,9 @@ int serv_run(char* filename)
 
     do
     {
-        //P(FIFO1)
-        //sem_wait(sem_fifo1);
-
         read(FD_IN, cli_opt, 15);
-        //close(FD_IN);
         opt_num = get_params(cli_opt);
-        //Handle and write to FIFO2
-        //handle_cli(cli_opt);
+
         printf("OPTION: %s\n", cli_opt);
         printf("NUME: %d\n", opt_num);
 
@@ -74,19 +79,17 @@ int serv_run(char* filename)
 
         action_handler(cli_opt, opt_num, filename, text_msg);
 
-        //text_msg =
-        //  "ID;DESCRIPCION;PRECIO;COSTO;STOCK;\n1;Harina Blancaflor;70;40;0;\n2;Yerba Mate Cruz de Malta;180;120;100;\n3;Café La Morenita;140;100;53;\n4;Té La Virginia;60;30;0;\n";
-
         write(FD_OUT, text_msg, 200);
-        //close(FD_OUT);
-        //V(FIFO2)
-        //sem_post(sem_fifo2);
+
+
     } while (strstr(cli_opt, "QUIT") == NULL);
 
+    //close FIFOs
     close(FD_IN);
     close(FD_OUT);
-    unlink(FIFO1);
-    unlink(FIFO2);
+    //close semaphore
+    sem_close(serv_inst);
+	sem_unlink("serv_inst");
 
     return 0;
 }
@@ -191,23 +194,29 @@ void repo(int num, char* msg, char* filename)
     FILE* fp;
     int total = 0;
 
-    fp = fopen(filename, "r");
-    fgets(rline, sizeof(rline), fp);//read header first
-    while(fscanf(fp, "%d;%[^;];%d;%d;%d;", &prod.id, prod.descr, &prod.prec, &prod.cost, &prod.stock) != EOF)
+    if(num == -1)
     {
-        if(prod.stock == 0)
-        {
-            total += num * prod.cost;
-         }
-    }
-    fclose(fp);
-
-    if(!total)
-    {
-        char err_msg[] = "No se pudo calcular la reposicion!\n";
+        char err_msg[] = "No se pudo ejecutar la opcion REPO falta cantidad a reponer\n";
         memcpy(msg, err_msg, sizeof(err_msg));
     } else {
-        sprintf(msg, "$%d\n", total);
+        fp = fopen(filename, "r");
+        fgets(rline, sizeof(rline), fp);//read header first
+        while(fscanf(fp, "%d;%[^;];%d;%d;%d;", &prod.id, prod.descr, &prod.prec, &prod.cost, &prod.stock) != EOF)
+        {
+            if(prod.stock == 0)
+            {
+                total += num * prod.cost;
+            }
+        }
+        fclose(fp);
+
+        if(!total)
+        {
+            char err_msg[] = "No se pudo calcular la reposicion!\n";
+            memcpy(msg, err_msg, sizeof(err_msg));
+        } else {
+            sprintf(msg, "$%d\n", total);
+        }
     }
 }
 
@@ -235,6 +244,13 @@ void action_handler(char* opt, int num, char* filename, char* msg)
     if(strstr(opt, "REPO") != NULL)
     {
         repo(num, msg, filename);
+        action = 1;
+    }
+
+    if(strstr(opt, "QUIT") != NULL)
+    {
+        char ret_msg[] = "Cerrando servicio...\nLiberando FIFOs...\nGracias vuelvas prontos!\n"; //The line is a lie
+        memcpy(msg, ret_msg, sizeof(ret_msg));
         action = 1;
     }
 
